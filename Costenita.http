@@ -1,0 +1,6 @@
+@Costenita_HostAddress = http://localhost:5118
+
+GET {{Costenita_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

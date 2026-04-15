@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Costenita", "Costenita.csproj", "{27BBAD3D-B6AD-E4D7-484C-CB46B51C4C60}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{27BBAD3D-B6AD-E4D7-484C-CB46B51C4C60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27BBAD3D-B6AD-E4D7-484C-CB46B51C4C60}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27BBAD3D-B6AD-E4D7-484C-CB46B51C4C60}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27BBAD3D-B6AD-E4D7-484C-CB46B51C4C60}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FA1572AA-7BCA-4B3A-A74F-CD6BC558B0F3}
+	EndGlobalSection
+EndGlobal
