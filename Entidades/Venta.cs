@@ -11,4 +11,6 @@ public class Venta
 
     public Guid ClienteId { get; set; }
     public Cliente? Cliente { get; set; }
+    public List<DetalleVenta>? Detalles {get; set;}
 }
+
