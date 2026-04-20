@@ -3,87 +3,86 @@ using Microsoft.EntityFrameworkCore;
 using Costenita.Data;
 using Costenita.Entidades;
 
-namespace Costenita.Controllers
+namespace Costenita.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class LotesController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class LotesController : ControllerBase
+    private readonly AppDbContext _contexto;
+
+    public LotesController(AppDbContext contexto)
     {
-        private readonly AppDbContext _contexto;
+        _contexto = contexto;
+    }
 
-        public LotesController(AppDbContext contexto)
-        {
-            _contexto = contexto;
-        }
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<Lote>>> GetLotes()
+    {
+        return Ok(await _contexto.Lotes
+            .Include(l => l.Producto)
+            .ToListAsync());
+    }
 
-      
-        [HttpGet]
-        public async Task<ActionResult<ICollection<Lote>>> GetLotes()
-        {
-            var lotes = await _contexto.Lotes
-                .Include(l => l.Producto)
-                .ToListAsync();
+    [HttpGet("{id}")]
+    public async Task<ActionResult<Lote>> GetLote(Guid id)
+    {
+        var lote = await _contexto.Lotes
+            .Include(l => l.Producto)
+            .FirstOrDefaultAsync(l => l.Id == id);
 
-            return Ok(lotes);
-        }
+        if (lote == null)
+            return NotFound();
 
-       
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Lote>> GetLote(Guid id)
-        {
-            var lote = await _contexto.Lotes
-                .Include(l => l.Producto)
-                .FirstOrDefaultAsync(l => l.Id == id);
+        return Ok(lote);
+    }
 
-            if (lote == null)
-                return NotFound();
+    [HttpPost]
+    public async Task<ActionResult<Lote>> CreateLote(Lote lote)
+    {
+        var producto = await _contexto.Productos.FindAsync(lote.ProductoId);
 
-            return Ok(lote);
-        }
+        if (producto == null)
+            return BadRequest("Producto no existe");
 
-      
-        [HttpPost]
-        public async Task<ActionResult<Lote>> CreateLote([FromBody] Lote lote)
-        {
-            _contexto.Lotes.Add(lote);
-            await _contexto.SaveChangesAsync();
+        // 🔥 SUMAR STOCK
+        producto.Stock += lote.Cantidad;
 
-            return CreatedAtAction(nameof(GetLote), new { id = lote.Id }, lote);
-        }
+        _contexto.Lotes.Add(lote);
+        await _contexto.SaveChangesAsync();
 
-       
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateLote(Guid id, [FromBody] Lote lote)
-        {
-            if (id != lote.Id)
-                return BadRequest("El ID no coincide con el lote enviado.");
+        return CreatedAtAction(nameof(GetLote), new { id = lote.Id }, lote);
+    }
 
-            var existing = await _contexto.Lotes.FindAsync(id);
-            if (existing == null)
-                return NotFound();
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateLote(Guid id, Lote lote)
+    {
+        if (id != lote.Id)
+            return BadRequest("ID no coincide");
 
-          
-            existing.Codigo = lote.Codigo;
-            existing.FechaProduccion = lote.FechaProduccion;
-            existing.FechaVencimiento = lote.FechaVencimiento;
-            existing.Cantidad = lote.Cantidad;
-            existing.ProductoId = lote.ProductoId;
+        var existing = await _contexto.Lotes.FindAsync(id);
+        if (existing == null)
+            return NotFound();
 
-            await _contexto.SaveChangesAsync();
-            return NoContent();
-        }
+        existing.Codigo = lote.Codigo;
+        existing.FechaProduccion = lote.FechaProduccion;
+        existing.FechaVencimiento = lote.FechaVencimiento;
+        existing.Cantidad = lote.Cantidad;
+        existing.ProductoId = lote.ProductoId;
 
-        
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteLote(Guid id)
-        {
-            var lote = await _contexto.Lotes.FindAsync(id);
-            if (lote == null)
-                return NotFound();
+        await _contexto.SaveChangesAsync();
+        return NoContent();
+    }
 
-            _contexto.Lotes.Remove(lote);
-            await _contexto.SaveChangesAsync();
-            return NoContent();
-        }
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteLote(Guid id)
+    {
+        var lote = await _contexto.Lotes.FindAsync(id);
+        if (lote == null)
+            return NotFound();
+
+        _contexto.Lotes.Remove(lote);
+        await _contexto.SaveChangesAsync();
+        return NoContent();
     }
 }

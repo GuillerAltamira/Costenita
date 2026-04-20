@@ -20,7 +20,7 @@ public class AppDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<Cliente>()
-            .ToTable("Cliente");
+            .ToTable("Clientes");
 
         modelBuilder.Entity<Cliente>()
             .Property(c => c.Nombre)
@@ -33,7 +33,7 @@ public class AppDbContext : DbContext
 
 
         modelBuilder.Entity<Producto>()
-            .ToTable("Producto");
+            .ToTable("Productos");
 
         modelBuilder.Entity<Producto>()
             .Property(p => p.Nombre)
@@ -50,7 +50,7 @@ public class AppDbContext : DbContext
 
 
         modelBuilder.Entity<Lote>()
-            .ToTable("Lote");
+            .ToTable("Lotes");
 
         modelBuilder.Entity<Lote>()
             .Property(l => l.Codigo)
@@ -64,7 +64,7 @@ public class AppDbContext : DbContext
 
 
         modelBuilder.Entity<Venta>()
-            .ToTable("Venta");
+            .ToTable("Ventas");
 
         modelBuilder.Entity<Venta>()
             .Property(v => v.Total)
@@ -73,7 +73,7 @@ public class AppDbContext : DbContext
 
 
         modelBuilder.Entity<DetalleVenta>()
-            .ToTable("DetalleVenta");
+            .ToTable("DetalleVentas");
 
         modelBuilder.Entity<DetalleVenta>()
             .Property(d => d.PrecioUnitario)
