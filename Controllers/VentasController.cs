@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Costenita.Data;
 using Costenita.Entidades;
+using Costenita.Dto.Venta.AgregarVenta;
+using Costenita.Dto.Venta.ListarVenta;
 
 namespace Costenita.Controllers;
 
@@ -17,14 +19,32 @@ public class VentasController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Venta>>> GetVentas()
-    {
-        return Ok(await _contexto.Ventas
-            .Include(v => v.Cliente)
-            .Include(v => v.Detalles)
-                .ThenInclude(d => d.Producto)
-            .ToListAsync());
-    }
+public async Task<ActionResult<IEnumerable<ListarVentaDTO>>> GetVentas()
+{
+    var ventas = await _contexto.Ventas
+        .Include(v => v.Cliente)
+        .Include(v => v.Detalles)
+            .ThenInclude(d => d.Producto)
+        .Select(v => new ListarVentaDTO
+        {
+            Id = v.Id,
+            Fecha = v.Fecha,
+            Cliente = v.Cliente!.Nombre,
+            FormaDePago = v.FormaDePago,
+            Total = v.Total,
+            Detalles = v.Detalles.Select(d => new DetalleVentaListarDTO
+            {
+                Producto = d.Producto!.Nombre,
+                Cantidad = d.Cantidad,
+                PrecioUnitario = d.PrecioUnitario,
+                Subtotal = d.Subtotal
+            }).ToList()
+        })
+        .ToListAsync();
+
+    return Ok(ventas);
+}
+
 
     [HttpGet("{id}")]
     public async Task<ActionResult<Venta>> GetVenta(Guid id)
@@ -42,41 +62,58 @@ public class VentasController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult> CreateVenta(Venta venta)
+public async Task<ActionResult> CreateVenta(AgregarVentaDTO dto)
+{
+    var cliente = await _contexto.Clientes.FindAsync(dto.ClienteId);
+    if (cliente == null)
+        return BadRequest("Cliente no existe");
+
+    var venta = new Venta
     {
-        var cliente = await _contexto.Clientes.FindAsync(venta.ClienteId);
-        if (cliente == null)
-            return BadRequest("Cliente no existe");
+        Id = Guid.NewGuid(),
+        ClienteId = dto.ClienteId,
+        FormaDePago = dto.FormaDePago,
+        Fecha = DateTime.Now,
+        Detalles = new List<DetalleVenta>()
+    };
 
-        decimal total = 0;
+    decimal total = 0;
 
-        foreach (var detalle in venta.Detalles)
+    foreach (var item in dto.Detalles)
+    {
+        var producto = await _contexto.Productos.FindAsync(item.ProductoId);
+
+        if (producto == null)
+            return BadRequest("Producto no existe");
+
+        if (producto.Stock < item.Cantidad)
+            return BadRequest($"Stock insuficiente para {producto.Nombre}");
+
+        var detalle = new DetalleVenta
         {
-            var producto = await _contexto.Productos.FindAsync(detalle.ProductoId);
+            Id = Guid.NewGuid(),
+            ProductoId = item.ProductoId,
+            Cantidad = item.Cantidad,
+            PrecioUnitario = producto.Precio,
+            Subtotal = item.Cantidad * producto.Precio,
+            VentaId = venta.Id
+        };
 
-            if (producto == null)
-                return BadRequest("Producto no existe");
+        total += detalle.Subtotal;
 
-            if (producto.Stock < detalle.Cantidad)
-                return BadRequest($"Stock insuficiente para {producto.Nombre}");
+        producto.Stock -= item.Cantidad;
 
-            detalle.PrecioUnitario = producto.Precio;
-            detalle.Subtotal = detalle.Cantidad * detalle.PrecioUnitario;
-
-            total += detalle.Subtotal;
-
-            // 🔥 DESCUENTO STOCK
-            producto.Stock -= detalle.Cantidad;
-        }
-
-        venta.Total = total;
-        venta.Fecha = DateTime.Now;
-
-        _contexto.Ventas.Add(venta);
-        await _contexto.SaveChangesAsync();
-
-        return Ok(venta);
+        venta.Detalles.Add(detalle);
     }
+
+    venta.Total = total;
+
+    _contexto.Ventas.Add(venta);
+    await _contexto.SaveChangesAsync();
+
+    return Ok(venta);
+}
+
 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateVenta(Guid id, Venta venta)

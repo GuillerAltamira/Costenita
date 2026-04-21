@@ -40,6 +40,10 @@ public class AppDbContext : DbContext
             .HasMaxLength(50);
 
         modelBuilder.Entity<Producto>()
+            .Property(p => p.Tamano)
+            .HasPrecision(5,2);
+
+        modelBuilder.Entity<Producto>()
             .Property(p => p.Tipo)
             .HasMaxLength(30);
 

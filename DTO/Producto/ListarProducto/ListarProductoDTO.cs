@@ -1,16 +1,12 @@
 using System;
-using System.Collections.Generic;
 
-namespace Costenita.Entidades;
+namespace Costenita.Dto.Producto.ListarProducto;
 
-public class Producto
+public class ListarProductoDTO
 {
     public Guid Id { get; set; }
     public string Nombre { get; set; } = "";
     public int Tamano { get; set; }
-    public string? Tipo { get; set; } 
     public decimal Precio { get; set; }
     public int Stock { get; set; }
-
-    public List<Lote>? Lotes { get; set; }
 }

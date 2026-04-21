@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Costenita.Data;
 using Costenita.Entidades;
+using Costenita.Dto.Producto.AgregarProducto;
+using Costenita.Dto.Producto.ListarProducto;
 
 namespace Costenita.Controllers;
 
@@ -16,34 +18,68 @@ public class ProductosController : ControllerBase
         _contexto = contexto;
     }
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Producto>>> GetProductos()
-    {
-        return Ok(await _contexto.Productos.ToListAsync());
-    }
+   [HttpGet]
+public async Task<ActionResult<IEnumerable<ListarProductoDTO>>> GetProductos()
+{
+    var productos = await _contexto.Productos
+        .Select(p => new ListarProductoDTO
+        {
+            Id = p.Id,
+            Nombre = p.Nombre,
+            Tamano = p.Tamano,
+            Precio = p.Precio,
+            Stock = p.Stock
+        })
+        .ToListAsync();
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Producto>> GetProducto(Guid id)
-    {
-        var producto = await _contexto.Productos.FindAsync(id);
+    return Ok(productos);
+}
 
-        if (producto == null)
-            return NotFound();
 
-        return Ok(producto);
-    }
+
+  [HttpGet("{id}")]
+public async Task<ActionResult<ListarProductoDTO>> GetProducto(Guid id)
+{
+    var producto = await _contexto.Productos
+        .Where(p => p.Id == id)
+        .Select(p => new ListarProductoDTO
+        {
+            Id = p.Id,
+            Nombre = p.Nombre,
+            Precio = p.Precio,
+            Stock = p.Stock
+        })
+        .FirstOrDefaultAsync();
+
+    if (producto == null)
+        return NotFound();
+
+    return Ok(producto);
+}
+
+
 
     [HttpPost]
-    public async Task<ActionResult> CreateProducto(Producto producto)
+public async Task<ActionResult> CreateProducto(AgregarProductoDTO dto)
+{
+    if (dto.Precio <= 0)
+        return BadRequest("Precio inválido");
+
+    var producto = new Producto
     {
-        if (producto.Precio <= 0)
-            return BadRequest("Precio inválido");
+        Id = Guid.NewGuid(),
+        Nombre = dto.Nombre,
+        Tamano = dto.Tamano,
+        Precio = dto.Precio,
+        Stock = dto.Stock
+    };
 
-        _contexto.Productos.Add(producto);
-        await _contexto.SaveChangesAsync();
+    _contexto.Productos.Add(producto);
+    await _contexto.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetProducto), new { id = producto.Id }, producto);
-    }
+    return Ok(producto);
+}
+
 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateProducto(Guid id, Producto producto)
