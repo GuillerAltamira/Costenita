@@ -2,8 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Costenita.Data;
 using Costenita.Entidades;
-using Costenita.Dto.Venta.AgregarVenta;
 using Costenita.Dto.Venta.ListarVenta;
+using Costenita.DTO.Venta.AgregarVenta;
+using Costenita.DTO.Venta.DetalleVenta;
 
 namespace Costenita.Controllers;
 
@@ -62,9 +63,10 @@ public async Task<ActionResult<IEnumerable<ListarVentaDTO>>> GetVentas()
     }
 
     [HttpPost]
-public async Task<ActionResult> CreateVenta(AgregarVentaDTO dto)
+public async Task<ActionResult> CreateVenta([FromBody] AgregarVentaInput dto)
 {
     var cliente = await _contexto.Clientes.FindAsync(dto.ClienteId);
+
     if (cliente == null)
         return BadRequest("Cliente no existe");
 
@@ -84,22 +86,22 @@ public async Task<ActionResult> CreateVenta(AgregarVentaDTO dto)
         var producto = await _contexto.Productos.FindAsync(item.ProductoId);
 
         if (producto == null)
-            return BadRequest("Producto no existe");
+            return BadRequest($"Producto no existe: {item.ProductoId}");
 
         if (producto.Stock < item.Cantidad)
-            return BadRequest($"Stock insuficiente para {producto.Nombre}");
+            return BadRequest($"Stock insuficiente: {producto.Nombre}");
 
         var detalle = new DetalleVenta
         {
             Id = Guid.NewGuid(),
-            ProductoId = item.ProductoId,
+            ProductoId = producto.Id,
             Cantidad = item.Cantidad,
             PrecioUnitario = producto.Precio,
-            Subtotal = item.Cantidad * producto.Precio,
-            VentaId = venta.Id
+            Subtotal = producto.Precio * item.Cantidad
         };
 
         total += detalle.Subtotal;
+
 
         producto.Stock -= item.Cantidad;
 

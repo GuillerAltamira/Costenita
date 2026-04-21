@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Costenita.Dto.Cliente.AgregarCliente;
+namespace Costenita.DTO.Cliente.AgregarCliente;
 
-public class AgregarClienteDTO
+public class AgregarClienteInput
 {
     [Required]
     public int Ci { get; set; }

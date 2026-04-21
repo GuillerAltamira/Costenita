@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
-using Costenita.Dto.Cliente.AgregarCliente;
-using Costenita.Dto.Cliente.ListarCliente;
-using System;
 using Microsoft.EntityFrameworkCore;
 using Costenita.Data;
 using Costenita.Entidades;
+using Costenita.DTO.Cliente.AgregarCliente;
+using Costenita.DTO.Cliente.ListarClientes;
+using Costenita.DTO.Cliente.ActualizarCliente;
+using Costenita.DTO.Cliente.EliminarCliente;
+using Costenita.DTO.Cliente.ObtenerCliente;
 
 namespace Costenita.Controllers;
 
@@ -21,87 +23,92 @@ public class ClientesController : ControllerBase
 
 
 
+
     [HttpGet]
-public async Task<ActionResult<IEnumerable<ListarClienteDTO>>> GetClientes()
-{
-    var clientes = await _contexto.Clientes
-        .Select(c => new ListarClienteDTO
-        {
-            Id = c.Id,
-            Ci = c.Ci,
-            Extension = c.Extension,
-            Nombre = c.Nombre,
-            FechaNacimiento = c.FechaNacimiento
-        })
-        .ToListAsync();
+    public async Task<ActionResult<IEnumerable<ListarClientesOutput>>> GetClientes()
+    {
+        var clientes = await _contexto.Clientes
+            .Select(c => new ListarClientesOutput
+            {
+                Id = c.Id,
+                Nombre = c.Nombre,
+                Ci = c.Ci
+            })
+            .ToListAsync();
 
-    return Ok(clientes);
-}
+        return Ok(clientes);
+    }
 
+  
 
 
     [HttpGet("{id}")]
-public async Task<ActionResult<ListarClienteDTO>> GetCliente(Guid id)
-{
-    var cliente = await _contexto.Clientes
-        .Where(c => c.Id == id)
-        .Select(c => new ListarClienteDTO
-        {
-            Id = c.Id,
-            Ci = c.Ci,
-            Extension = c.Extension,
-            Nombre = c.Nombre,
-            FechaNacimiento = c.FechaNacimiento
-        })
-        .FirstOrDefaultAsync();
+    public async Task<ActionResult<ObtenerClienteOutput>> GetCliente(Guid id)
+    {
+        var cliente = await _contexto.Clientes
+            .Where(c => c.Id == id)
+            .Select(c => new ObtenerClienteOutput
+            {
+                Id = c.Id,
+                Nombre = c.Nombre,
+                Ci = c.Ci,
+                Extension = c.Extension,
+                FechaNacimiento = c.FechaNacimiento
+            })
+            .FirstOrDefaultAsync();
 
-    if (cliente == null)
-        return NotFound();
+        if (cliente == null)
+            return NotFound();
 
-    return Ok(cliente);
+        return Ok(cliente);
+    }
 
 
-}
 
 
     [HttpPost]
-public async Task<ActionResult> CreateCliente(AgregarClienteDTO dto)
-{
-    var cliente = new Cliente
+    public async Task<ActionResult> CreateCliente([FromBody] AgregarClienteInput dto)
     {
-        Id = Guid.NewGuid(),
-        Ci = dto.Ci,
-        Extension = dto.Extension,
-        Nombre = dto.Nombre,
-        FechaNacimiento = dto.FechaNacimiento
-    };
+        var cliente = new Cliente
+        {
+            Id = Guid.NewGuid(),
+            Ci = dto.Ci,
+            Extension = dto.Extension,
+            Nombre = dto.Nombre,
+            FechaNacimiento = dto.FechaNacimiento
+        };
 
-    _contexto.Clientes.Add(cliente);
-    await _contexto.SaveChangesAsync();
+        _contexto.Clientes.Add(cliente);
+        await _contexto.SaveChangesAsync();
 
-    return CreatedAtAction(nameof(GetCliente), new { id = cliente.Id }, cliente);
-}
+        return CreatedAtAction(nameof(GetCliente), new { id = cliente.Id }, cliente);
+    }
+
 
 
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateCliente(Guid id, Cliente cliente)
+    public async Task<IActionResult> UpdateCliente(Guid id, [FromBody] ActualizarClienteInput dto)
     {
-        if (id != cliente.Id)
+        if (id != dto.Id)
             return BadRequest("ID no coincide");
 
-        var existing = await _contexto.Clientes.FindAsync(id);
-        if (existing == null)
+        var cliente = await _contexto.Clientes.FindAsync(id);
+
+        if (cliente == null)
             return NotFound();
 
-        existing.Nombre = cliente.Nombre;
-        existing.Ci = cliente.Ci;
-        existing.Extension = cliente.Extension;
-        existing.FechaNacimiento = cliente.FechaNacimiento;
+        cliente.Ci = dto.Ci;
+        cliente.Extension = dto.Extension;
+        cliente.Nombre = dto.Nombre;
+        cliente.FechaNacimiento = dto.FechaNacimiento;
 
         await _contexto.SaveChangesAsync();
+
         return NoContent();
     }
+
+   
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCliente(Guid id)
@@ -117,4 +124,3 @@ public async Task<ActionResult> CreateCliente(AgregarClienteDTO dto)
         return NoContent();
     }
 }
-
