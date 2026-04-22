@@ -82,31 +82,49 @@ public async Task<ActionResult> CreateVenta([FromBody] AgregarVentaInput dto)
     decimal total = 0;
 
     foreach (var item in dto.Detalles)
+{
+    var producto = await _contexto.Productos.FindAsync(item.ProductoId);
+
+    if (producto == null)
+        return BadRequest($"Producto no existe: {item.ProductoId}");
+
+    int cantidadRestante = item.Cantidad;
+
+    var lotes = await _contexto.Lotes
+        .Where(l => l.ProductoId == item.ProductoId && l.Cantidad > 0)
+        .OrderBy(l => l.FechaProduccion)
+        .ToListAsync();
+
+    if (!lotes.Any())
+        return BadRequest($"No hay stock para {producto.Nombre}");
+
+    foreach (var lote in lotes)
     {
-        var producto = await _contexto.Productos.FindAsync(item.ProductoId);
+        if (cantidadRestante <= 0)
+            break;
 
-        if (producto == null)
-            return BadRequest($"Producto no existe: {item.ProductoId}");
+        int descontar = Math.Min(lote.Cantidad, cantidadRestante);
 
-        if (producto.Stock < item.Cantidad)
-            return BadRequest($"Stock insuficiente: {producto.Nombre}");
-
-        var detalle = new DetalleVenta
-        {
-            Id = Guid.NewGuid(),
-            ProductoId = producto.Id,
-            Cantidad = item.Cantidad,
-            PrecioUnitario = producto.Precio,
-            Subtotal = producto.Precio * item.Cantidad
-        };
-
-        total += detalle.Subtotal;
-
-
-        producto.Stock -= item.Cantidad;
-
-        venta.Detalles.Add(detalle);
+        lote.Cantidad -= descontar;
+        cantidadRestante -= descontar;
     }
+
+    if (cantidadRestante > 0)
+        return BadRequest($"Stock insuficiente en lotes para {producto.Nombre}");
+
+    var detalle = new DetalleVenta
+    {
+        Id = Guid.NewGuid(),
+        ProductoId = producto.Id,
+        Cantidad = item.Cantidad,
+        PrecioUnitario = producto.Precio,
+        Subtotal = producto.Precio * item.Cantidad
+    };
+
+    total += detalle.Subtotal;
+
+    venta.Detalles.Add(detalle);
+}
 
     venta.Total = total;
 
