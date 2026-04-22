@@ -28,7 +28,7 @@ public async Task<ActionResult<IEnumerable<ListarProductoDTO>>> GetProductos()
             Nombre = p.Nombre,
             Tamano = p.Tamano,
             Precio = p.Precio,
-            Stock = p.Stock
+            Stock = p.Lotes!.Sum(l => l.Cantidad)
         })
         .ToListAsync();
 
@@ -47,7 +47,7 @@ public async Task<ActionResult<ListarProductoDTO>> GetProducto(Guid id)
             Id = p.Id,
             Nombre = p.Nombre,
             Precio = p.Precio,
-            Stock = p.Stock
+            Stock = p.Lotes!.Sum(l => l.Cantidad)
         })
         .FirstOrDefaultAsync();
 
