@@ -131,7 +131,26 @@ public async Task<ActionResult> CreateVenta([FromBody] AgregarVentaInput dto)
     _contexto.Ventas.Add(venta);
     await _contexto.SaveChangesAsync();
 
-    return Ok(venta);
+    return Ok(new
+{
+    venta.Id,
+    venta.Fecha,
+    venta.Total,
+    Cliente = cliente.Nombre,
+    Detalles = venta.Detalles.Select(d => new
+    {
+        Producto = _contexto.Productos
+            .Where(p => p.Id == d.ProductoId)
+            .Select(p => p.Nombre)
+            .FirstOrDefault(),
+
+        d.Cantidad,
+        d.PrecioUnitario,
+        d.Subtotal
+    })
+});
+
+
 }
 
 
