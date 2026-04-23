@@ -1,6 +1,6 @@
 using System;
 
-namespace Costenita.Dto.Venta.ListarVenta;
+namespace Costenita.DTO.Venta.ListarVenta;
 
 public class DetalleVentaListarOutput
 {

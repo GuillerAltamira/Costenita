@@ -207,7 +207,7 @@ public async Task<ActionResult<ObtenerVentaOutput>> GetVentaById(Guid id)
           foreach (var lote in lotes)
           {
             lote.Cantidad += cantidad;
-            break; // versión simple
+            break; 
           }
         }
 
