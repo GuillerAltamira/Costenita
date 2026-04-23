@@ -1,8 +1,8 @@
 using System;
 
-namespace Costenita.Dto.Cliente.ListarCliente;
+namespace Costenita.DTO.Cliente.ListarCliente;
 
-public class ListarClienteDTO
+public class ListarClienteOutput
 {
     public Guid Id { get; set; }
     public int Ci { get; set; }

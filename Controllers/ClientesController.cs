@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Costenita.Data;
 using Costenita.Entidades;
 using Costenita.DTO.Cliente.AgregarCliente;
-using Costenita.DTO.Cliente.ListarClientes;
+using Costenita.DTO.Cliente.ListarCliente;
 using Costenita.DTO.Cliente.ActualizarCliente;
 using Costenita.DTO.Cliente.EliminarCliente;
 using Costenita.DTO.Cliente.ObtenerCliente;
@@ -25,10 +25,10 @@ public class ClientesController : ControllerBase
 
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ListarClientesOutput>>> GetClientes()
+    public async Task<ActionResult<IEnumerable<ListarClienteOutput>>> GetClientes()
     {
         var clientes = await _contexto.Clientes
-            .Select(c => new ListarClientesOutput
+            .Select(c => new ListarClienteOutput
             {
                 Id = c.Id,
                 Nombre = c.Nombre,
@@ -111,16 +111,25 @@ public class ClientesController : ControllerBase
    
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteCliente(Guid id)
+    public async Task<ActionResult<EliminarClienteOutput>> DeleteCliente(Guid id)
     {
-        var cliente = await _contexto.Clientes.FindAsync(id);
+      var cliente = await _contexto.Clientes.FindAsync(id);
 
-        if (cliente == null)
-            return NotFound();
+       if (cliente == null)
+       return NotFound("Cliente no encontrado");
 
-        _contexto.Clientes.Remove(cliente);
-        await _contexto.SaveChangesAsync();
+       string nombre = cliente.Nombre;
 
-        return NoContent();
+       _contexto.Clientes.Remove(cliente);
+       await _contexto.SaveChangesAsync();
+
+       var respuesta = new EliminarClienteOutput
+       {
+          Mensaje = "Cliente eliminado correctamente",
+          NombreCliente = nombre
+       };
+
+        return Ok(respuesta);
+
     }
 }

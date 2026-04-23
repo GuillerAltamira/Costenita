@@ -2,7 +2,7 @@ using System;
 
 namespace Costenita.Dto.Venta.ListarVenta;
 
-public class DetalleVentaListarDTO
+public class DetalleVentaListarOutput
 {
     public string Producto { get; set; } = "";
     public int Cantidad { get; set; }

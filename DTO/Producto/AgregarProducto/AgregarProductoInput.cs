@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Costenita.Dto.Producto.AgregarProducto;
 
-public class AgregarProductoDTO
+public class AgregarProductoInput
 {
     [Required]
     [MaxLength(50)]

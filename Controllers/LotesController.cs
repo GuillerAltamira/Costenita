@@ -5,6 +5,8 @@ using Costenita.Entidades;
 using Costenita.DTO.Lote.AgregarLote;
 using Costenita.DTO.Lote.ListarLotes;
 using Costenita.DTO.Lote.ActualizarLote;
+using Costenita.DTO.Lote.EliminarLote;
+using Costenita.DTO.Lote.ObtenerLote;
 
 namespace Costenita.Controllers;
 
@@ -40,109 +42,112 @@ public async Task<ActionResult<IEnumerable<ListarLoteOutput>>> GetLotes()
 }
 
     [HttpGet("{id}")]
-public async Task<ActionResult<ListarLoteOutput>> GetLote(Guid id)
-{
-    var lote = await _contexto.Lotes
-        .Include(l => l.Producto)
-        .Where(l => l.Id == id)
-        .Select(l => new ListarLoteOutput
-        {
-            Id = l.Id,
-            Codigo = l.Codigo,
-            FechaProduccion = l.FechaProduccion,
-            FechaVencimiento = l.FechaVencimiento,
-            Cantidad = l.Cantidad,
-            ProductoNombre = l.Producto != null ? l.Producto.Nombre : "",
-            ProductoPrecio = l.Producto != null ? l.Producto.Precio : 0
-        })
-        .FirstOrDefaultAsync();
+    public async Task<ActionResult<ObtenerLoteOutput>> GetLote(Guid id)
+    {
+        var lote = await _contexto.Lotes
+         .Include(l => l.Producto)
+         .FirstOrDefaultAsync(l => l.Id == id);
 
-    if (lote == null)
+         if (lote == null)
         return NotFound();
 
-    return Ok(lote);
-}
+        return Ok(new ObtenerLoteOutput
+        {
+           Id = lote.Id,
+           Codigo = lote.Codigo,
+           FechaProduccion = lote.FechaProduccion,
+           FechaVencimiento = lote.FechaVencimiento,
+           Cantidad = lote.Cantidad,
+           ProductoNombre = lote.Producto!.Nombre
+        });
+    }
 
 
     [HttpPost]
-public async Task<ActionResult> CreateLote([FromBody] AgregarLoteInput dto)
-{
-    var producto = await _contexto.Productos.FindAsync(dto.ProductoId);
-
-    if (producto == null)
-        return BadRequest("Producto no existe");
-
-    var lote = new Lote
+    public async Task<ActionResult> CreateLote([FromBody] AgregarLoteInput dto)
     {
-        Id = Guid.NewGuid(),
-        Codigo = dto.Codigo,
-        FechaProduccion = dto.FechaProduccion,
-        FechaVencimiento = dto.FechaVencimiento,
-        Cantidad = dto.Cantidad,
-        ProductoId = dto.ProductoId
-    };
+        var producto = await _contexto.Productos.FindAsync(dto.ProductoId);
+
+        if (producto == null)
+            return BadRequest("Producto no existe");
+
+        var lote = new Lote
+        {
+            Id = Guid.NewGuid(),
+            Codigo = dto.Codigo,
+            FechaProduccion = dto.FechaProduccion,
+            FechaVencimiento = dto.FechaVencimiento,
+            Cantidad = dto.Cantidad,
+            ProductoId = dto.ProductoId
+        };
 
     
-    producto.Stock += dto.Cantidad;
+        producto.Stock += dto.Cantidad;
 
-    _contexto.Lotes.Add(lote);
-    await _contexto.SaveChangesAsync();
+        _contexto.Lotes.Add(lote);
+        await _contexto.SaveChangesAsync();
 
-    return Ok(new
-{
-    lote.Id,
-    lote.Codigo,
-    lote.Cantidad,
-    lote.FechaProduccion,
-    lote.FechaVencimiento,
-    lote.ProductoId
-});
-
-
-}
+        return Ok(new
+        {
+            lote.Id,
+            lote.Codigo,
+            lote.Cantidad,
+            lote.FechaProduccion,
+            lote.FechaVencimiento,
+            lote.ProductoId
+        });
+    }
 
     [HttpPut("{id}")]
-public async Task<IActionResult> UpdateLote(Guid id, [FromBody] ActualizarLoteInput dto)
-{
-    var lote = await _contexto.Lotes.FindAsync(id);
+    public async Task<IActionResult> UpdateLote(Guid id, [FromBody] ActualizarLoteInput dto)
+    {
+      var lote = await _contexto.Lotes.FindAsync(id);
 
-    if (lote == null)
-        return NotFound();
+      if (lote == null)
+      return NotFound();
 
-    var producto = await _contexto.Productos.FindAsync(lote.ProductoId);
+      var producto = await _contexto.Productos.FindAsync(lote.ProductoId);
 
-    if (producto == null)
-        return BadRequest("Producto no encontrado");
+       if (producto == null)
+       return BadRequest("Producto no encontrado");
 
   
-    int diferencia = dto.Cantidad - lote.Cantidad;
+       int diferencia = dto.Cantidad - lote.Cantidad;
 
     
-    producto.Stock += diferencia;
+       producto.Stock += diferencia;
 
-    if (producto.Stock < 0)
-        return BadRequest("Stock no puede ser negativo");
+       if (producto.Stock < 0)
+       return BadRequest("Stock no puede ser negativo");
 
   
-    lote.Codigo = dto.Codigo;
-    lote.FechaProduccion = dto.FechaProduccion;
-    lote.FechaVencimiento = dto.FechaVencimiento;
-    lote.Cantidad = dto.Cantidad;
+       lote.Codigo = dto.Codigo;
+       lote.FechaProduccion = dto.FechaProduccion;
+       lote.FechaVencimiento = dto.FechaVencimiento;
+       lote.Cantidad = dto.Cantidad;
 
-    await _contexto.SaveChangesAsync();
+       await _contexto.SaveChangesAsync();
 
-    return NoContent();
-}
+       return NoContent(); 
+    }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteLote(Guid id)
+    public async Task<ActionResult<EliminarLoteOutput>> DeleteLote(Guid id)
     {
-        var lote = await _contexto.Lotes.FindAsync(id);
-        if (lote == null)
-            return NotFound();
+      var lote = await _contexto.Lotes.FindAsync(id);
 
-        _contexto.Lotes.Remove(lote);
-        await _contexto.SaveChangesAsync();
-        return NoContent();
+        if (lote == null)
+        return NotFound("Lote no encontrado");
+
+        string codigo = lote.Codigo;
+
+       _contexto.Lotes.Remove(lote);
+       await _contexto.SaveChangesAsync();
+
+       return Ok(new EliminarLoteOutput
+      {
+        Mensaje = "Lote eliminado correctamente",
+        CodigoLote = codigo
+      });
     }
 }

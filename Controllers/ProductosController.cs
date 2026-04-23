@@ -18,11 +18,11 @@ public class ProductosController : ControllerBase
         _contexto = contexto;
     }
 
-   [HttpGet]
-public async Task<ActionResult<IEnumerable<ListarProductoDTO>>> GetProductos()
-{
-    var productos = await _contexto.Productos
-        .Select(p => new ListarProductoDTO
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<ListarProductoOutput>>> GetProductos() 
+    {
+        var productos = await _contexto.Productos
+        .Select(p => new ListarProductoOutput
         {
             Id = p.Id,
             Nombre = p.Nombre,
@@ -32,17 +32,17 @@ public async Task<ActionResult<IEnumerable<ListarProductoDTO>>> GetProductos()
         })
         .ToListAsync();
 
-    return Ok(productos);
-}
+        return Ok(productos);
+    }
 
 
 
-  [HttpGet("{id}")]
-public async Task<ActionResult<ListarProductoDTO>> GetProducto(Guid id)
-{
-    var producto = await _contexto.Productos
-        .Where(p => p.Id == id)
-        .Select(p => new ListarProductoDTO
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ListarProductoOutput>> GetProducto(Guid id)
+    {
+         var producto = await _contexto.Productos
+         .Where(p => p.Id == id)
+         .Select(p => new ListarProductoOutput
         {
             Id = p.Id,
             Nombre = p.Nombre,
@@ -51,65 +51,76 @@ public async Task<ActionResult<ListarProductoDTO>> GetProducto(Guid id)
         })
         .FirstOrDefaultAsync();
 
-    if (producto == null)
+        if (producto == null)
         return NotFound();
 
-    return Ok(producto);
-}
+        return Ok(producto);
+    }
 
 
 
     [HttpPost]
-public async Task<ActionResult> CreateProducto(AgregarProductoDTO dto)
-{
-    if (dto.Precio <= 0)
+    public async Task<ActionResult> CreateProducto(AgregarProductoInput dto)
+    {
+        if (dto.Precio <= 0)
         return BadRequest("Precio inválido");
 
-    var producto = new Producto
-    {
-        Id = Guid.NewGuid(),
-        Nombre = dto.Nombre,
-        Tamano = dto.Tamano,
-        Precio = dto.Precio,
-        Stock = dto.Stock
-    };
+        var producto = new Producto
+        {
+           Id = Guid.NewGuid(),
+           Nombre = dto.Nombre,
+           Tamano = dto.Tamano,
+           Precio = dto.Precio,
+           Stock = dto.Stock
+        };
 
-    _contexto.Productos.Add(producto);
-    await _contexto.SaveChangesAsync();
+        _contexto.Productos.Add(producto);
+        await _contexto.SaveChangesAsync();
 
-    return Ok(producto);
-}
+        return Ok(producto);
+    }
 
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateProducto(Guid id, Producto producto)
+    public async Task<ActionResult<ActualizarProductoOutput>> UpdateProducto(Guid id, [FromBody] ActualizarProductoInput dto)
     {
-        if (id != producto.Id)
-            return BadRequest("ID no coincide");
+      var producto = await _contexto.Productos.FindAsync(id);
 
-        var existing = await _contexto.Productos.FindAsync(id);
-        if (existing == null)
-            return NotFound();
+        if (producto == null)
+        return NotFound("Producto no encontrado");
 
-        existing.Nombre = producto.Nombre;
-        existing.Precio = producto.Precio;
-        existing.Stock = producto.Stock;
+        producto.Nombre = dto.Nombre;
+        producto.Precio = dto.Precio;
+        producto.Stock = dto.Stock;
+        producto.Tamano = dto.Tamano;
+        producto.Tipo = dto.Tipo;
 
         await _contexto.SaveChangesAsync();
-        return NoContent();
+
+        return Ok(new ActualizarProductoOutput
+       {
+        Mensaje = "Producto actualizado correctamente",
+        NombreProducto = producto.Nombre
+       });
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteProducto(Guid id)
+    public async Task<ActionResult<EliminarProductoOutput>> DeleteProducto(Guid id)
     {
-        var producto = await _contexto.Productos.FindAsync(id);
+       var producto = await _contexto.Productos.FindAsync(id);
 
         if (producto == null)
-            return NotFound();
+        return NotFound("Producto no encontrado");
+
+        string nombre = producto.Nombre;
 
         _contexto.Productos.Remove(producto);
         await _contexto.SaveChangesAsync();
 
-        return NoContent();
+        return Ok(new EliminarProductoOutput
+       {
+         Mensaje = "Producto eliminado correctamente",
+         NombreProducto = nombre
+       });
     }
 }

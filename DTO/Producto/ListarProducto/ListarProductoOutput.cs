@@ -2,7 +2,7 @@ using System;
 
 namespace Costenita.Dto.Producto.ListarProducto;
 
-public class ListarProductoDTO
+public class ListarProductoOutput
 {
     public Guid Id { get; set; }
     public string Nombre { get; set; } = "";
