@@ -2,8 +2,8 @@ namespace Costenita.DTO.Venta.ObtenerVenta;
 public class ObtenerVentaOutput
 {
     public DateTime Fecha { get; set; }
-    public string Cliente { get; set; } = string.Empty;
-    public string FormaDePago { get; set; } = string.Empty;
+    public required string Cliente { get; set; } 
+    public required string FormaDePago { get; set; } 
     public decimal Total { get; set; }
 
     public List<DetalleVentaOutput> Detalles { get; set; } = new();

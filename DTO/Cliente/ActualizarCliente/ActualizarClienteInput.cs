@@ -15,7 +15,7 @@ public class ActualizarClienteInput
 
     [Required]
     [StringLength(50)]
-    public string Nombre { get; set; } = string.Empty;
+    public required string Nombre { get; set; } 
 
     public DateTime FechaNacimiento { get; set; }
 }
