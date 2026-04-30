@@ -5,7 +5,6 @@ using Costenita.Entidades;
 using Costenita.DTO.Cliente.AgregarCliente;
 using Costenita.DTO.Cliente.ListarCliente;
 using Costenita.DTO.Cliente.ActualizarCliente;
-using Costenita.DTO.Cliente.EliminarCliente;
 using Costenita.DTO.Cliente.ObtenerCliente;
 
 namespace Costenita.Controllers;
@@ -22,8 +21,6 @@ public class ClientesController : ControllerBase
     }
 
 
-
-
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ListarClienteOutput>>> GetClientes()
     {
@@ -32,14 +29,39 @@ public class ClientesController : ControllerBase
             {
                 Id = c.Id,
                 Nombre = c.Nombre,
-                Ci = c.Ci
+                Extension = c.Extension,
+                Ci = c.Ci,
+                FechaNacimiento = c.FechaNacimiento
             })
             .ToListAsync();
 
         return Ok(clientes);
     }
+    [HttpGet("buscar")]
+    public async Task<ActionResult> BuscarClientes([FromQuery] string? nombre)
+    {
+        var query = _contexto.Clientes.AsQueryable();
 
-  
+        if (!string.IsNullOrEmpty(nombre))
+        {
+            query = query.Where(c => c.Nombre.Contains(nombre));
+        }
+
+        var clientes = await query
+        .Select(c => new ListarClienteOutput
+        {
+            Id = c.Id,
+            Nombre = c.Nombre,
+            Ci = c.Ci,
+            Extension = c.Extension,
+            FechaNacimiento = c.FechaNacimiento
+
+        })
+        .ToListAsync();
+
+         return Ok(clientes);
+    }
+
 
 
     [HttpGet("{id}")]
@@ -58,12 +80,10 @@ public class ClientesController : ControllerBase
             .FirstOrDefaultAsync();
 
         if (cliente == null)
-            return NotFound();
+            return NotFound("Cliente no encontrado");
 
         return Ok(cliente);
     }
-
-
 
 
     [HttpPost]
@@ -81,22 +101,24 @@ public class ClientesController : ControllerBase
         _contexto.Clientes.Add(cliente);
         await _contexto.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetCliente), new { id = cliente.Id }, cliente);
+        Console.WriteLine(dto.Extension);
+
+        return Ok(new
+        {
+            mensaje = "Cliente creado correctamente",
+            cliente.Nombre,
+            cliente.Ci
+        });
     }
-
-
 
 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateCliente(Guid id, [FromBody] ActualizarClienteInput dto)
     {
-        if (id != dto.Id)
-            return BadRequest("ID no coincide");
-
         var cliente = await _contexto.Clientes.FindAsync(id);
 
         if (cliente == null)
-            return NotFound();
+            return NotFound("Cliente no encontrado");
 
         cliente.Ci = dto.Ci;
         cliente.Extension = dto.Extension;
@@ -105,31 +127,10 @@ public class ClientesController : ControllerBase
 
         await _contexto.SaveChangesAsync();
 
-        return NoContent();
-    }
-
-   
-
-    [HttpDelete("{id}")]
-    public async Task<ActionResult<EliminarClienteOutput>> DeleteCliente(Guid id)
-    {
-      var cliente = await _contexto.Clientes.FindAsync(id);
-
-       if (cliente == null)
-       return NotFound("Cliente no encontrado");
-
-       string nombre = cliente.Nombre;
-
-       _contexto.Clientes.Remove(cliente);
-       await _contexto.SaveChangesAsync();
-
-       var respuesta = new EliminarClienteOutput
-       {
-          Mensaje = "Cliente eliminado correctamente",
-          NombreCliente = nombre
-       };
-
-        return Ok(respuesta);
-
+        return Ok(new
+        {
+            mensaje = "Cliente actualizado correctamente",
+            cliente.Nombre
+        });
     }
 }

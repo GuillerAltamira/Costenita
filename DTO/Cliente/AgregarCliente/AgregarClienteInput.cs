@@ -7,8 +7,8 @@ public class AgregarClienteInput
     [Required]
     public int Ci { get; set; }
 
-    [MaxLength(2)]
-    public string? Extension { get; set; }
+    [MaxLength(5)]
+    public required string Extension { get; set; }
 
     [Required]
     [MaxLength(50)]

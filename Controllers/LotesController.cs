@@ -5,7 +5,6 @@ using Costenita.Entidades;
 using Costenita.DTO.Lote.AgregarLote;
 using Costenita.DTO.Lote.ListarLotes;
 using Costenita.DTO.Lote.ActualizarLote;
-using Costenita.DTO.Lote.EliminarLote;
 using Costenita.DTO.Lote.ObtenerLote;
 
 namespace Costenita.Controllers;
@@ -129,25 +128,5 @@ public async Task<ActionResult<IEnumerable<ListarLoteOutput>>> GetLotes()
        await _contexto.SaveChangesAsync();
 
        return NoContent(); 
-    }
-
-    [HttpDelete("{id}")]
-    public async Task<ActionResult<EliminarLoteOutput>> DeleteLote(Guid id)
-    {
-      var lote = await _contexto.Lotes.FindAsync(id);
-
-        if (lote == null)
-        return NotFound("Lote no encontrado");
-
-        string codigo = lote.Codigo;
-
-       _contexto.Lotes.Remove(lote);
-       await _contexto.SaveChangesAsync();
-
-       return Ok(new EliminarLoteOutput
-      {
-        Mensaje = "Lote eliminado correctamente",
-        CodigoLote = codigo
-      });
     }
 }

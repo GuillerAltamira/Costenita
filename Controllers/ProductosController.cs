@@ -70,6 +70,7 @@ public class ProductosController : ControllerBase
            Id = Guid.NewGuid(),
            Nombre = dto.Nombre,
            Tamano = dto.Tamano,
+           Tipo = dto.Tipo,
            Precio = dto.Precio,
            Stock = dto.Stock
         };
@@ -101,26 +102,6 @@ public class ProductosController : ControllerBase
        {
         Mensaje = "Producto actualizado correctamente",
         NombreProducto = producto.Nombre
-       });
-    }
-
-    [HttpDelete("{id}")]
-    public async Task<ActionResult<EliminarProductoOutput>> DeleteProducto(Guid id)
-    {
-       var producto = await _contexto.Productos.FindAsync(id);
-
-        if (producto == null)
-        return NotFound("Producto no encontrado");
-
-        string nombre = producto.Nombre;
-
-        _contexto.Productos.Remove(producto);
-        await _contexto.SaveChangesAsync();
-
-        return Ok(new EliminarProductoOutput
-       {
-         Mensaje = "Producto eliminado correctamente",
-         NombreProducto = nombre
        });
     }
 }
