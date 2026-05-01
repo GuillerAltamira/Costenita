@@ -60,32 +60,33 @@ public class ProductosController : ControllerBase
 
 
     [HttpPost]
-    public async Task<ActionResult> CreateProducto(AgregarProductoInput dto)
+    public async Task<ActionResult> CreateProducto([FromBody] AgregarProductoInput dto)
     {
-        if (dto.Precio <= 0)
-        return BadRequest("Precio inválido");
-
         var producto = new Producto
         {
-           Id = Guid.NewGuid(),
-           Nombre = dto.Nombre,
-           Tamano = dto.Tamano,
-           Tipo = dto.Tipo,
-           Precio = dto.Precio,
-           Stock = dto.Stock
+            Id = Guid.NewGuid(),
+            Nombre = dto.Nombre,
+            Tamano = dto.Tamano,
+            Precio = dto.Precio
         };
 
         _contexto.Productos.Add(producto);
         await _contexto.SaveChangesAsync();
 
-        return Ok(producto);
+        return Ok(new
+        {
+            Mensaje = "Producto creado correctamente",
+            Nombre = producto.Nombre,
+            Tamano = producto.Tamano,
+            Stock = 0 
+        });
     }
 
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<ActualizarProductoOutput>> UpdateProducto(Guid id, [FromBody] ActualizarProductoInput dto)
+     public async Task<ActionResult<ActualizarProductoOutput>> UpdateProducto(Guid id, [FromBody] ActualizarProductoInput dto)
     {
-      var producto = await _contexto.Productos.FindAsync(id);
+        var producto = await _contexto.Productos.FindAsync(id);
 
         if (producto == null)
         return NotFound("Producto no encontrado");
@@ -100,8 +101,8 @@ public class ProductosController : ControllerBase
 
         return Ok(new ActualizarProductoOutput
        {
-        Mensaje = "Producto actualizado correctamente",
-        NombreProducto = producto.Nombre
+            Mensaje = "Producto actualizado correctamente",
+            NombreProducto = producto.Nombre
        });
     }
 }

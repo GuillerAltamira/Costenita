@@ -21,9 +21,9 @@ public class LotesController : ControllerBase
     }
 
     [HttpGet]
-public async Task<ActionResult<IEnumerable<ListarLoteOutput>>> GetLotes()
-{
-    var lotes = await _contexto.Lotes
+    public async Task<ActionResult<IEnumerable<ListarLoteOutput>>> GetLotes()
+   {
+         var lotes = await _contexto.Lotes
         .Include(l => l.Producto)
         .Select(l => new ListarLoteOutput
         {
@@ -36,18 +36,17 @@ public async Task<ActionResult<IEnumerable<ListarLoteOutput>>> GetLotes()
             ProductoPrecio = l.Producto.Precio
         })
         .ToListAsync();
-
-    return Ok(lotes);
-}
+        return Ok(lotes);
+    }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<ObtenerLoteOutput>> GetLote(Guid id)
     {
         var lote = await _contexto.Lotes
-         .Include(l => l.Producto)
-         .FirstOrDefaultAsync(l => l.Id == id);
+            .Include(l => l.Producto)
+            .FirstOrDefaultAsync(l => l.Id == id);
 
-         if (lote == null)
+            if (lote == null)
         return NotFound();
 
         return Ok(new ObtenerLoteOutput
@@ -68,32 +67,27 @@ public async Task<ActionResult<IEnumerable<ListarLoteOutput>>> GetLotes()
         var producto = await _contexto.Productos.FindAsync(dto.ProductoId);
 
         if (producto == null)
-            return BadRequest("Producto no existe");
+        return BadRequest("Producto no existe");
 
         var lote = new Lote
         {
             Id = Guid.NewGuid(),
-            Codigo = dto.Codigo,
+            ProductoId = dto.ProductoId,
+            Cantidad = dto.Cantidad,
             FechaProduccion = dto.FechaProduccion,
             FechaVencimiento = dto.FechaVencimiento,
-            Cantidad = dto.Cantidad,
-            ProductoId = dto.ProductoId
+            Codigo = dto.Codigo
         };
-
-    
-        producto.Stock += dto.Cantidad;
 
         _contexto.Lotes.Add(lote);
         await _contexto.SaveChangesAsync();
 
         return Ok(new
         {
-            lote.Id,
-            lote.Codigo,
-            lote.Cantidad,
-            lote.FechaProduccion,
-            lote.FechaVencimiento,
-            lote.ProductoId
+            Mensaje = "Lote agregado correctamente",
+            Producto = producto.Nombre,
+            Cantidad = lote.Cantidad,
+            FechaProduccion = lote.FechaProduccion.ToShortDateString()
         });
     }
 

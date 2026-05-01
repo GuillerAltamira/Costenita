@@ -4,7 +4,7 @@ using Costenita.Data;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer("Server=CISCO-13;Database=CostenitaDB;Trusted_Connection=True;TrustServerCertificate=True"));
+    options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=CostenitaDB;Trusted_Connection=True;TrustServerCertificate=True"));
 
 builder.Services.AddControllers();
 
